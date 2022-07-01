@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "postgres_to_es"
+version = "0.1.0"
+description = "ETL system to load data to ElasticSerch"
+authors = ["IAmIrina <irina.vl.kiseleva@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+psycopg2-binary = "2.9.3"
+python-dotenv = "0.20.0"
+pydantic = "1.9.0"
+elasticsearch = "7.17.4"
+
+[tool.poetry.dev-dependencies]
+flake8 = "3.9.0"
+pytest = "6.2.5"
+pre-commit = "2.15.0"
+wemake-python-styleguide = "0.15.3"
+flake8-bandit = "2.1.2"
+bandit = "1.7.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

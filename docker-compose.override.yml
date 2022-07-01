@@ -1,0 +1,28 @@
+version: '3.4'
+
+services:
+  pg_db:
+    container_name: pg-db.interconnect
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - store-pg:/var/lib/postgresql/data
+    networks:
+      - interconnect
+
+  movies_admin:
+    depends_on:
+      - pg-db    
+    volumes:
+      - static-data:/opt/app/static
+    entrypoint: ["/docker-entrypoint.sh"]
+
+volumes:
+  store-pg: 
+    driver: local
