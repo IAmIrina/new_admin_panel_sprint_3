@@ -1,7 +1,14 @@
+from etl.lib.storage import State, RedisStorage
 import inspect
 import re
 import sys
 from json import JSONDecodeError
+
+#from etl import __version__
+
+
+# def test_version():
+#     assert __version__ == '0.1.0'
 
 
 # TODO: здесь вставьте import для своих файлов State и RedisStorage

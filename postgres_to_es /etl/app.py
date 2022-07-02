@@ -7,9 +7,11 @@ from time import sleep
 from config import settings
 from config.loggers import LOGGING
 from database.pg_database import PGConnection
-from lib.transform import Transformer
-from lib.extract import Extractor, Enricher
-from lib.elastic_load import ESLoader
+from processors.transformer import Transformer
+from processors.extractor import Extractor
+from processors.enricher import Enricher
+from processors.loader import ESLoader
+import sys
 
 dictConfig(LOGGING)
 logger = logging.getLogger(__name__)
@@ -18,6 +20,7 @@ pg = PGConnection(settings.DATABASES['pg'])
 extractor = Extractor(pg)
 enricher = Enricher(pg)
 loader = ESLoader(settings.ES)
+# sys.exit(0)
 
 # SQL_SETTINGS = settings.DATABASES['sqlite']
 PG_SETTINGS = settings.DATABASES['pg']

@@ -36,11 +36,25 @@ services:
       - 127.0.0.1:9200:9200
     networks:
       - interconnect
+    
+  redis:
+    image: redis:7.0.2-alpine
+    container_name: redis.interconnect
+    restart: always
+    ports:
+      - 127.0.0.1:6379:6379
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    volumes: 
+      - redis-storage:/data
+    networks:
+      - interconnect
 
 volumes:
   static-data:
     driver: local
   esdata: 
+    driver: local
+  redis-storage:
     driver: local
 
 networks:

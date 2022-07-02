@@ -16,19 +16,6 @@ dictConfig(LOGGING)
 logger = logging.getLogger(__name__)
 
 
-# @contextmanager
-# def pg_connection(**kwargs: dict) -> Generator[psycopg2.extensions.connection, None, None]:
-#     """Контестный менеджер подключения PostgreSQL.
-#     Args:
-#         kwargs: параметры подключения к PostgreSQL
-#     Yields:
-#         Generator[psycopg2.extensions.connection, None, None]: подключение к PostgreSQL
-#     """
-#     conn = psycopg2.connect(**kwargs)
-#     yield conn
-#     conn.close()
-
-
 class PGConnection(object):
     """Класс загрузки данных в PostgreSQL.
     Attributes:
@@ -69,7 +56,7 @@ class PGConnection(object):
                     cursor.execute(sql, (kwargs))
                     result = cursor.fetchall()
             except Exception as err:
-                logger.exception('Error to check data')
+                logger.exception('Error to check data, SQL %s', sql)
                 retry -= 1
                 self.disconnect()
                 self.connect()

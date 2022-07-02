@@ -2,10 +2,10 @@ from functools import wraps
 from time import sleep
 
 import logging
-from logging.config import dictConfig
-from config.loggers import LOGGING
+# from logging.config import dictConfig
+# from config.loggers import LOGGING
 
-dictConfig(LOGGING)
+# dictConfig(LOGGING)
 logger = logging.getLogger(__name__)
 
 
@@ -30,29 +30,17 @@ def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10):
             delay = start_sleep_time
             while True:
                 try:
-                    func(self, *args, **kwargs)
+                    return func(self, *args, **kwargs)
                 except Exception as err:
                     logger.exception(
-                        'Error. Next try in {sec} seconds'.format(
-                            sec=min(delay, border_sleep_time))
+                        'Error in {func}. Next try in {sec} seconds'.format(
+                            sec=min(delay, border_sleep_time),
+                            func=str(func),
+                        )
                     )
                     sleep(min(delay, border_sleep_time))
                     if delay < border_sleep_time:
                         delay = start_sleep_time * (factor ** retry)
                     retry += 1
-                else:
-                    break
         return inner
     return func_wrapper
-
-
-# @backoff()
-# def myfunct():
-#     if random.randint(3, 9) < 6:
-#         print('Exception')
-#         raise Exception()
-#     else:
-#         print('bye')
-
-
-# myfunct()
