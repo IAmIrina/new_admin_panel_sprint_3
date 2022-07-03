@@ -1,4 +1,4 @@
-"""Настройки логирования проекта."""
+"""Logging settings."""
 
 import os
 import sys
@@ -10,7 +10,7 @@ LOG_STDOUT = 'stdout'
 
 LOGGING = types.MappingProxyType({
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
     'formatters': {
         'file': {
             'format': '%(asctime)s: [ %(levelname)s ]: %(module)s : [%(process)d]: %(message)s',
@@ -24,12 +24,27 @@ LOGGING = types.MappingProxyType({
         },
     },
     'loggers': {
-        'pg_database': {
+        'database.pg_database': {
             'level': log_level,
             'handlers': [LOG_STDOUT],
             'propagate': False,
         },
-        'sqlite_database': {
+        'processors.enricher': {
+            'level': log_level,
+            'handlers': [LOG_STDOUT],
+            'propagate': False,
+        },
+        'processors.extractor': {
+            'level': log_level,
+            'handlers': [LOG_STDOUT],
+            'propagate': False,
+        },
+        'processors.loader': {
+            'level': log_level,
+            'handlers': [LOG_STDOUT],
+            'propagate': False,
+        },
+        'processors.transformer': {
             'level': log_level,
             'handlers': [LOG_STDOUT],
             'propagate': False,

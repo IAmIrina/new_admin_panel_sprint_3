@@ -1,4 +1,4 @@
-"""Настройки проекта."""
+"""ETL settings."""
 import os
 import pathlib
 import types
@@ -18,6 +18,9 @@ DEFAULT_ES_PORT = 9200
 DEFAULT_REDIS_HOST = '127.0.0.1'
 DEFAULT_REDIS_PORT = 6379
 
+DELAY = os.environ.get('DELAY', 1)
+PAGE_SIZE = os.environ.get('PAGE_SIZE', 1000)
+
 DATABASES = types.MappingProxyType({
     'pg': {
         'dbname': os.environ.get('DB_NAME'),
@@ -32,8 +35,8 @@ ES = types.MappingProxyType({
     'hosts': '{host}:{port}'.format(
         host='http://127.0.0.1',  # os.environ.get('ES_HOST', DEFAULT_ES_HOST),
         port=9200,  # os.environ.get('ES_PORT', DEFAULT_ES_PORT),
-    )
-}
+    ),
+},
 )
 
 REDIS_HOST = types.MappingProxyType({
@@ -60,7 +63,7 @@ REDIS = types.MappingProxyType({
         **REDIS_HOST,
         'db': 5,
     },
-}
+},
 )
 
 ENTITIES = ('film_work', 'person', 'genre')
