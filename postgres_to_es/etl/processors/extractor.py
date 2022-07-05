@@ -6,7 +6,7 @@ from typing import Callable
 from psycopg2.sql import SQL, Identifier
 from config.loggers import LOGGING
 
-from lib import storage
+from lib import storage, sql_templates
 from config import settings
 from database.pg_database import PGConnection
 
@@ -20,22 +20,22 @@ class Extractor(object):
 
     Attributes:
         pg: Used to work with PG Database.
-        callback: Result of proccessing will return to the callable.
+        result_handler: Result of proccessing will return to the callable.
         storage: Permanent storage to keep state.
         state: State of the process
 
     """
 
-    def __init__(self, pg: PGConnection, callback: Callable) -> None:
+    def __init__(self, pg: PGConnection, result_handler: Callable) -> None:
         """Extractor class constructor.
 
         Args:
             pg: Used to work with PG Database.
-            callback: Result of proccessing will return to the function.
+            result_handler: Result of proccessing will return to the function.
 
         """
         self.pg = pg
-        self.callback = callback
+        self.result_handler = result_handler
         self.storage = storage.RedisStorage(settings.REDIS['extractor'])
         self.state = storage.State(self.storage)
 
@@ -62,16 +62,11 @@ class Extractor(object):
         """
         logger.debug('Select modified from %s', table)
 
-        query = SQL("""Select id, modified from {table}
-                where modified > %(modified)s
-                ORDER BY modified
-                LIMIT %(page_size)s
-            """).format(
+        query = SQL(sql_templates.get_modified_records).format(
             table=Identifier(schema, table),
         )
 
         query_result = self.pg._retry_fetchall(
-            'Select modified records',
             query,
             modified=self.get_last_modified(table),
             page_size=page_size,
@@ -81,8 +76,7 @@ class Extractor(object):
         if query_result:
             modified = query_result[-1]['modified']
             self.state.set_state(key=table, value=modified)
-            self.callback(
+            self.result_handler(
                 where_clause_table=table,
                 pkeys=[record['id'] for record in query_result],
-                page_size=2,
             )

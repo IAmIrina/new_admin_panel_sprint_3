@@ -15,26 +15,26 @@ logger = logging.getLogger(__name__)
 
 
 class Transformer(object):
-    """Implement transform data to Elasticksearch index format.
+    """Implement transform data to Elasticksearch index schema format.
 
     Attributes:
-        callback: Result of proccessing will return to the callable.
+        result_handler: Result of proccessing will return to the callable.
         storage: Permanent storage to keep state.
         state: State of the process
 
     """
 
-    def __init__(self, callback: Callable) -> None:
+    def __init__(self, result_handler: Callable) -> None:
         """Transformer class constructor.
 
         Args:
-            callback: Result of the proccessing will be returned to the function.
+            result_handler: Result of the proccessing will be returned to the function.
 
         """
 
         self.storage = storage.RedisStorage(settings.REDIS['transformer'])
         self.state = storage.State(self.storage)
-        self.callback = callback
+        self.result_handler = result_handler
         self.proceed()
 
     def proceed(self) -> None:
@@ -44,7 +44,6 @@ class Transformer(object):
             logger.debug('Data to proceed %s', self.state.state.get('data'))
             self.proccess(
                 movies=self.state.state.get('data'),
-                index=self.state.state.get('index'),
             )
 
     def set_state(self, **kwargs) -> None:
@@ -83,15 +82,14 @@ class Transformer(object):
         else:
             return [schemas.Person(**person).dict() for person in persons]
 
-    def proccess(self, movies: dict, index: str = 'movies') -> None:
-        """Transform data and pass results to callback.
+    def proccess(self, movies: list) -> None:
+        """Transform data and pass results to result_handler.
 
         Args:
             movies: movies data to transform.
-            index: name of Elasticsearch index.
 
         """
-        self.set_state(data=[movie for movie in movies], index=index)
+        self.set_state(data=[movie for movie in movies])
         for idx, movie in enumerate(movies):
             try:
                 movies[idx] = schemas.Movie(
@@ -101,9 +99,8 @@ class Transformer(object):
                     writers_names=self.get_person_names(movie['persons'], ['writer']),
                     actors=self.persons_by_role(movie['persons'], ['actor']),
                     writers=self.persons_by_role(movie['persons'], ['writer']),
-                    index=index,
                 ).dict(by_alias=True)
             except Exception:
                 logger.exception('Validation data error: %s', movies[idx])
         self.set_state(data=None)
-        self.callback(movies)
+        self.result_handler(movies)

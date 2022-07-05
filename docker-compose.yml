@@ -10,6 +10,16 @@ services:
       - 127.0.0.1:8000:8000
     networks:
       - interconnect
+    
+  postgres_to_es:
+    container_name: postgres_to_es.interconnect
+    build: postgres_to_es/
+    env_file:
+       - .env
+    depends_on:
+      - elasticsearch
+    networks:
+      - interconnect
 
   nginx:
     image: nginx:stable

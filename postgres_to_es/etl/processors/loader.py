@@ -1,6 +1,7 @@
 """Load data process"""
 
 from datetime import datetime
+from typing import List
 from elasticsearch import Elasticsearch
 from elasticsearch import helpers
 
@@ -27,16 +28,21 @@ class ESLoader(object):
 
     """
 
-    def __init__(self, transport_options: dict) -> None:
+    def __init__(self, transport_options: dict, index: str, index_schema: dict = None) -> None:
         """ESLoader class constructor.
 
         Args:
             transport_options: Elasticsearch connection parameters.
+            index: Name of the Elasticsearch index.
+            index_schema: Schema of the index. Not None: the index creates.
 
         """
         self.client = Elasticsearch(**transport_options)
         self.storage = storage.RedisStorage(settings.REDIS['loader'])
         self.state = storage.State(self.storage)
+        self.index = index
+        if index_schema:
+            self.create_index(index=index, index_schema=index_schema)
         self.proceed()
 
     def proceed(self):
@@ -45,23 +51,50 @@ class ESLoader(object):
             logger.debug('Data to proceed %s', self.state.state.get('data'))
             self.proccess(self.state.state['data'])
 
-    def proccess(self, data: dict) -> None:
-        """Load data to Elasticseatch.
+    def convert_to_bulk_format(self, data: dict) -> dict:
+        """Convert to bulk format.
 
         Args:
-            data: Loading to ES data.
+            data: Converting dictionary.
+
+        Returns:
+            dict: Converted dictionary.
+
+        """
+        data['_index'] = self.index
+        if id := data.get('id'):
+            data['_id'] = id
+        return data
+
+    def proccess(self, data: dict) -> None:
+        """Load data to Elasticsearch.
+
+        Args:
+            data: Loading data.
 
         """
         self.state.set_state(key='data', value=data)
-        self.bulk(data)
+        self.bulk(list(map(self.convert_to_bulk_format, data)))
         self.state.set_state(key='data', value=None)
 
-    @ backoff()
-    def bulk(self, data: dict):
+    @backoff()
+    def create_index(self, index: str, index_schema: dict) -> None:
+        """Create index if the index doesn't exists.
+
+        Args:
+            index: Name of the index.
+            index_schema: Schema of the index.
+
+        """
+        if not self.client.indices.exists(index=index):
+            self.client.indices.create(index=index, body=index_schema)
+
+    @backoff()
+    def bulk(self, data: List[dict]) -> None:
         """Bulk data to ES with backoff implementation.
 
         Args:
-            data: Loading to ES data.
+            data: Loading data.
 
         """
         _, errors = helpers.bulk(self.client, data, stats_only=False)

@@ -1,4 +1,4 @@
-"""Загрузчик данных в Postgress."""
+"""Postgres function implementations."""
 
 import logging
 from logging.config import dictConfig
@@ -9,7 +9,7 @@ from psycopg2.extras import RealDictCursor
 
 from config.loggers import LOGGING
 
-from database.backoff_connection import backoff
+from database.backoff_connection import backoff, backoff_reconnect
 
 
 dictConfig(LOGGING)
@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 class PGConnection(object):
-    """PG Connection class for PostgreSQL.
+    """PG Connection class for backoff and execution PostgreSQL queiries.
 
-    The class implements backoff and wraps up  execution sql queries
+    The class implements backoff and wraps up execution sql queries.
 
     Attributes:
         pg_settings : settings for PG connection.
@@ -27,7 +27,7 @@ class PGConnection(object):
     """
 
     @backoff()
-    def connect(self) -> None:
+    def _connect(self) -> None:
         """PG connection function with backoff wrapper."""
         logger.debug(
             'Connecting to the DB %s. Timeout %s',
@@ -35,52 +35,47 @@ class PGConnection(object):
             self.pg_settings['connect_timeout'],
         )
         self.connection = psycopg2.connect(**self.pg_settings)
+        self.connection.set_session(readonly=True, autocommit=True)
+
         logger.debug('Connected to the DB %s', self.pg_settings['dbname'])
 
     def __init__(self, pg_settings: dict) -> None:
         """PGConnection class constructor.
+
         Args:
             pg_settings:  settings for PG connection.
+
         """
         self.pg_settings = pg_settings
-        self.connect()
+        self._connect()
 
-    def disconnect(self) -> None:
-        """Close PG connection."""
+    def __del__(self) -> None:
+        """Delete object event wrapper.
+
+        Close database connection.
+
+        """
         try:
             self.connection.close()
             logger.debug('Disconnect DB')
         except Exception:
             pass
 
-    def __del__(self) -> None:
-        """Delete object event wrapper.
-
-        Close PG connection when object is ready for deleting.
-
-        """
-        self.disconnect()
-
-    def _retry_fetchall(self, sql_id: str, sql: psycopg2.sql.Composed, **kwargs) -> RealDictCursor:
+    @backoff_reconnect()
+    def _retry_fetchall(self, sql: psycopg2.sql.Composed, **kwargs) -> RealDictCursor:
         """SQL query executor.
 
-        Execute passed in args sql query and return results.
+        Execute passed sql query and return results.
 
         Args:
-            sql_id: Query id for logging.
             sql: SQL query.
-            kwargs: keywordargs to pass into sql quey.
+            kwargs: keywordargs to pass into sql query.
 
         Returns:
-            RealDictCursor: records from database.
+            RealDictCursor: Records from database.
 
         """
-        while True:
-            try:
-                with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
-                    cursor.execute(sql, (kwargs))
-                    return cursor.fetchall()
-            except Exception:
-                logger.exception('Error to check data %s, SQL %s', sql_id, sql)
-                self.disconnect()
-                self.connect()
+        logger.debug('Try to execute sql %s. SQL PARAMS: %s', sql, kwargs)
+        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(sql, (kwargs))
+            return cursor.fetchall()

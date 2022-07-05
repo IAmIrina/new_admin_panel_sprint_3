@@ -4,13 +4,18 @@ import os
 import sys
 import types
 
-log_level = os.environ.get('LOG_LEVEL', 'DEBUG').upper()
+if os.environ.get('DEBUG').upper() == 'TRUE':
+    log_level = 'DEBUG'
+    disable_existing_loggers = False
+else:
+    log_level = 'INFO'
+    disable_existing_loggers = True
 
 LOG_STDOUT = 'stdout'
 
 LOGGING = types.MappingProxyType({
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': disable_existing_loggers,
     'formatters': {
         'file': {
             'format': '%(asctime)s: [ %(levelname)s ]: %(module)s : [%(process)d]: %(message)s',

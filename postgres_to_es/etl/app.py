@@ -1,4 +1,4 @@
-"""Movies ETL Service"""
+"""Movies ETL Service."""
 
 import logging
 from logging.config import dictConfig
@@ -19,13 +19,25 @@ pg = PGConnection(settings.DATABASES['pg'])
 
 if __name__ == '__main__':
 
+    logger.info('Initializing')
+
+    loader = ESLoader(
+        settings.ES['connection'],
+        index=settings.ES['index']['name'],
+        index_schema=settings.ES['index']['schema'],
+    )
+
+    transformer = Transformer(result_handler=loader.proccess)
+
+    enricher = Enricher(
+        pg=pg,
+        result_handler=transformer.proccess,
+        page_size=settings.PAGE_SIZE,
+    )
+
+    extractor = Extractor(pg=pg, result_handler=enricher.proccess)
+
     logger.info('Started')
-
-    loader = ESLoader(settings.ES)
-    transformer = Transformer(callback=loader.proccess)
-    enricher = Enricher(pg=pg, callback=transformer.proccess)
-    extractor = Extractor(pg=pg, callback=enricher.proccess)
-
     while True:
         for entity in settings.ENTITIES:
             extractor.proccess(entity, page_size=settings.PAGE_SIZE)
