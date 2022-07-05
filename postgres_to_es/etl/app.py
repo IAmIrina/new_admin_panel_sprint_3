@@ -7,10 +7,10 @@ from time import sleep
 from config import settings
 from config.loggers import LOGGING
 from database.pg_database import PGConnection
-from processors.transformer import Transformer
-from processors.extractor import Extractor
 from processors.enricher import Enricher
+from processors.extractor import Extractor
 from processors.loader import ESLoader
+from processors.transformer import Transformer
 
 dictConfig(LOGGING)
 logger = logging.getLogger(__name__)

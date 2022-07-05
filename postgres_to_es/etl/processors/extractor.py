@@ -1,15 +1,14 @@
-"""Extract data from source"""
+"""Extract data from source."""
 
 import logging
 from logging.config import dictConfig
 from typing import Callable
-from psycopg2.sql import SQL, Identifier
-from config.loggers import LOGGING
 
-from lib import storage, sql_templates
 from config import settings
+from config.loggers import LOGGING
 from database.pg_database import PGConnection
-
+from lib import sql_templates, storage
+from psycopg2.sql import SQL, Identifier
 
 dictConfig(LOGGING)
 logger = logging.getLogger(__name__)

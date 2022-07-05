@@ -3,11 +3,9 @@
 import logging
 from logging.config import dictConfig
 from typing import Callable
+
 from config import settings
-
-
 from config.loggers import LOGGING
-
 from lib import schemas, storage
 
 dictConfig(LOGGING)

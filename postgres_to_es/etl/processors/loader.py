@@ -1,18 +1,15 @@
-"""Load data process"""
-
-from datetime import datetime
-from typing import List
-from elasticsearch import Elasticsearch
-from elasticsearch import helpers
+"""Load data process."""
 
 import logging
+from datetime import datetime
 from logging.config import dictConfig
-from config.loggers import LOGGING
+from typing import List
 
-from lib import storage
-from database.backoff_connection import backoff
 from config import settings
-
+from config.loggers import LOGGING
+from database.backoff_connection import backoff
+from elasticsearch import Elasticsearch, helpers
+from lib import storage
 
 dictConfig(LOGGING)
 logger = logging.getLogger(__name__)

@@ -5,12 +5,9 @@ from logging.config import dictConfig
 
 import psycopg2
 import psycopg2.sql
-from psycopg2.extras import RealDictCursor
-
 from config.loggers import LOGGING
-
 from database.backoff_connection import backoff, backoff_reconnect
-
+from psycopg2.extras import RealDictCursor
 
 dictConfig(LOGGING)
 logger = logging.getLogger(__name__)

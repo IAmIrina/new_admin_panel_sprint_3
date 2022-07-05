@@ -10,9 +10,6 @@ WORKDIR /opt/app
 COPY ./requirements.txt requirements.txt
 RUN  pip3 install  --no-cache-dir -r requirements.txt
 
-COPY ./docker-entrypoint.sh /
-RUN chmod +x /docker-entrypoint.sh
-
 COPY . .
 
 USER web

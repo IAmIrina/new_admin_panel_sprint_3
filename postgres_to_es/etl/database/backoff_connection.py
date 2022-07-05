@@ -1,11 +1,11 @@
 
 """Backoff decorators."""
 
+import logging
 from functools import wraps
 from time import sleep
-
-import logging
 from typing import Any, Tuple
+
 logger = logging.getLogger(__name__)
 
 

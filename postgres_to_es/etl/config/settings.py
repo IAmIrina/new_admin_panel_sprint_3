@@ -5,7 +5,6 @@ import pathlib
 import types
 
 from dotenv import find_dotenv, load_dotenv
-
 from lib import es_index_schema
 
 load_dotenv(find_dotenv())
