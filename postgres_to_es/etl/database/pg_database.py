@@ -5,7 +5,7 @@ from logging.config import dictConfig
 
 import psycopg2
 import psycopg2.sql
-from config.loggers import LOGGING
+from lib.loggers import LOGGING
 from database.backoff_connection import backoff, backoff_reconnect
 from psycopg2.extras import RealDictCursor
 
@@ -59,7 +59,7 @@ class PGConnection(object):
             pass
 
     @backoff_reconnect()
-    def _retry_fetchall(self, sql: psycopg2.sql.Composed, **kwargs) -> RealDictCursor:
+    def retry_fetchall(self, sql: psycopg2.sql.Composed, **kwargs) -> RealDictCursor:
         """SQL query executor.
 
         Execute passed sql query and return results.

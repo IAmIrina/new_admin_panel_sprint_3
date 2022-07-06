@@ -5,8 +5,7 @@ from datetime import datetime
 from logging.config import dictConfig
 from typing import List
 
-from config import settings
-from config.loggers import LOGGING
+from lib.loggers import LOGGING
 from database.backoff_connection import backoff
 from elasticsearch import Elasticsearch, helpers
 from lib import storage
@@ -25,19 +24,21 @@ class ESLoader(object):
 
     """
 
-    def __init__(self, transport_options: dict, index: str, index_schema: dict = None) -> None:
+    def __init__(self, redis_settings: dict, transport_options: dict, index: str, index_schema: dict = None) -> None:
         """ESLoader class constructor.
 
         Args:
             transport_options: Elasticsearch connection parameters.
             index: Name of the Elasticsearch index.
             index_schema: Schema of the index. Not None: the index creates.
+            redis_settings: Redis connection settings.
 
         """
         self.client = Elasticsearch(**transport_options)
-        self.storage = storage.RedisStorage(settings.REDIS['loader'])
+        self.storage = storage.RedisStorage(redis_settings)
         self.state = storage.State(self.storage)
         self.index = index
+
         if index_schema:
             self.create_index(index=index, index_schema=index_schema)
         self.proceed()

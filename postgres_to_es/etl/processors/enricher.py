@@ -4,8 +4,7 @@ import logging
 from logging.config import dictConfig
 from typing import Callable
 
-from config import settings
-from config.loggers import LOGGING
+from lib.loggers import LOGGING
 from database.pg_database import PGConnection
 from lib import sql_templates, storage
 from psycopg2.sql import SQL, Identifier
@@ -26,17 +25,18 @@ class Enricher(object):
 
     """
 
-    def __init__(self, pg: PGConnection, result_handler: Callable, page_size: int = 100) -> None:
+    def __init__(self, pg: PGConnection, redis_settings: dict, result_handler: Callable, page_size: int = 100) -> None:
         """Enricher class constructor.
 
         Args:
             pg: Used to work with PG Database.
             result_handler: Result of the proccessing will return to the function.
+            redis_settings: Redis connection settings.
 
         """
         self.pg = pg
         self.result_handler = result_handler
-        self.storage = storage.RedisStorage(settings.REDIS['enricher'])
+        self.storage = storage.RedisStorage(redis_settings)
         self.state = storage.State(self.storage)
         self.page_size = page_size
         self.proceed()
@@ -76,7 +76,7 @@ class Enricher(object):
             where_clause_table=Identifier(where_clause_table),
         )
 
-        while query_result := self.pg._retry_fetchall(
+        while query_result := self.pg.retry_fetchall(
             query,
             pkeys=tuple(pkeys),
             last_id=self.state.get_state('last_processed_id') or '',

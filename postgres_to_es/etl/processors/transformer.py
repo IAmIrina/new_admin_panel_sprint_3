@@ -4,8 +4,7 @@ import logging
 from logging.config import dictConfig
 from typing import Callable
 
-from config import settings
-from config.loggers import LOGGING
+from lib.loggers import LOGGING
 from lib import schemas, storage
 
 dictConfig(LOGGING)
@@ -22,15 +21,16 @@ class Transformer(object):
 
     """
 
-    def __init__(self, result_handler: Callable) -> None:
+    def __init__(self, redis_settings: dict, result_handler: Callable) -> None:
         """Transformer class constructor.
 
         Args:
             result_handler: Result of the proccessing will be returned to the function.
+            redis_settings: Redis connection settings.
 
         """
 
-        self.storage = storage.RedisStorage(settings.REDIS['transformer'])
+        self.storage = storage.RedisStorage(redis_settings)
         self.state = storage.State(self.storage)
         self.result_handler = result_handler
         self.proceed()
