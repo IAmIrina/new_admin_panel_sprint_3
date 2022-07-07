@@ -1,5 +1,6 @@
 """Extract data from source."""
 
+import datetime
 import logging
 from logging.config import dictConfig
 from typing import Callable
@@ -48,7 +49,7 @@ class Extractor(object):
             str: ISO format date.
         """
         modified = self.state.get_state(table)
-        return modified or '1970-01-01'
+        return modified or datetime.date.min
 
     def proccess(self, table: str, schema: str = 'content', page_size: int = 100) -> None:
         """Get modified data.

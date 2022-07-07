@@ -4,13 +4,7 @@ from pydantic import BaseSettings, Field
 from lib import es_index_schema
 
 
-class EnvBaseSettings(BaseSettings):
-    """Common settings for the config classes"""
-    class Config:
-        env_file = ".env"
-
-
-class PostgresSettings(EnvBaseSettings):
+class PostgresSettings(BaseSettings):
     """Postgres connection settings."""
     host: str = Field('127.0.0.1', env='DB_HOST')
     port: str = Field(5432, env='DB_PORT')
@@ -20,26 +14,26 @@ class PostgresSettings(EnvBaseSettings):
     connect_timeout: int = 1
 
 
-class ElasticsearchConnection(EnvBaseSettings):
+class ElasticsearchConnection(BaseSettings):
     """Elasticsearch connection settings."""
     hosts: str = Field('http://localhost:9200', env='ES_HOST')
 
 
-class ElasticsearchSettings(EnvBaseSettings):
+class ElasticsearchSettings(BaseSettings):
     """Elasticsearch index settings."""
     connection: ElasticsearchConnection = ElasticsearchConnection()
     index: str = 'movies'
     index_schema: dict = es_index_schema.movies
 
 
-class RedisSettings(EnvBaseSettings):
+class RedisSettings(BaseSettings):
     """Redis connection settings."""
     host: str = Field('127.0.0.1', env='REDIS_HOST')
     port: int = Field(6379, env='DEFAULT_REDIS_PORT')
     password: str = Field(env='REDIS_PASSWORD')
 
 
-class Cashe(EnvBaseSettings):
+class Cashe(BaseSettings):
     """Redis connection settings for every processor."""
     extractor: dict = {**RedisSettings().dict(), 'db': 1}
     enricher: dict = {**RedisSettings().dict(), 'db': 2}
@@ -47,7 +41,7 @@ class Cashe(EnvBaseSettings):
     loader: dict = {**RedisSettings().dict(), 'db': 4}
 
 
-class Settings(EnvBaseSettings):
+class Settings(BaseSettings):
     """Project settings."""
 
     postgres: PostgresSettings = PostgresSettings()
